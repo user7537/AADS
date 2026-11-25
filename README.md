@@ -1,7 +1,12 @@
-============================================================
-Lab 1: Randomized Quick Sort
-============================================================
+# Design and Analysis of Algorithms — Lab Manual
 
+**Vivaan Singh Adhikari · 24/48029**
+
+---
+
+## Lab 1: Randomized Quick Sort
+
+```c
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -63,12 +68,13 @@ int main(void) {
 
     return 0;
 }
+```
 
+---
 
-============================================================
-Lab 2: Randomized Select
-============================================================
+## Lab 2: Randomized Select
 
+```c
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -123,12 +129,13 @@ int main() {
 
     return 0;
 }
+```
 
+---
 
-============================================================
-Lab 3: Kruskal's Algorithm
-============================================================
+## Lab 3: Kruskal's Algorithm
 
+```c
 // C code to implement Kruskal's algorithm
 #include <stdio.h>
 #include <stdlib.h>
@@ -214,12 +221,13 @@ int main()
 
     return 0;
 }
+```
 
+---
 
-============================================================
-Lab 4: Bellman-Ford Algorithm
-============================================================
+## Lab 4: Bellman-Ford Algorithm
 
+```c
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -282,12 +290,13 @@ int main()
     bellmanFord(graph, vertices, edges, 0);
     return 0;
 }
+```
 
+---
 
-============================================================
-Lab 5: B-Tree
-============================================================
+## Lab 5: B-Tree
 
+```cpp
 #include <iostream>
 using namespace std;
 
@@ -603,12 +612,13 @@ int main() {
 
     return 0;
 }
+```
 
+---
 
-============================================================
-Lab 6: KMP String Matching
-============================================================
+## Lab 6: KMP String Matching
 
+```cpp
 #include <iostream>
 #include <string>
 #include <vector>
@@ -677,12 +687,13 @@ int main() {
 
     return 0;
 }
+```
 
+---
 
-============================================================
-Lab 7: Suffix Tree
-============================================================
+## Lab 7: Suffix Tree
 
+```c
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -901,3 +912,4 @@ int main(int argc, char *argv[])
     strcpy(text, "xabxa#babxba$"); buildSuffixTree();
     return 0;
 }
+```
