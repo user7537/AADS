@@ -1,389 +1,903 @@
-= Questions
+============================================================
+Lab 1: Randomized Quick Sort
+============================================================
 
-1. Retrieve names of students enrolled in any society. 
-2. Retrieve all society names. 
-3. Retrieve students' names starting with the letter ‘A’. 
-4. Retrieve students' details studying in courses ‘computer science’ or ‘chemistry’.
-5. 5. Retrieve students’ names whose roll no either starts with ‘X’ or ‘Z’ and ends with ‘9’ 
-6. Find society details with more than N TotalSeats where N is to be input by the user 
-7. Update society table for the mentor name of a specific society 
-8. Find society names in which more than five students have enrolled 
-9. Find the name of the youngest student enrolled in society ‘NSS’ 
-10. Find the name of the most popular society (on the basis of enrolled students) 
-11. Find the name of two least popular societies (on the basis of enrolled students) 
-12. Find the students names who are not enrolled in any society.  
-13. Find the students names enrolled in at least two societies 
-14. Find society names in which maximum students are enrolled 
-15. Find names of all students who have enrolled in any society and society names in which 
-at least one student has enrolled 
-16. Find names of students who are enrolled in any of the three societies ‘Debating’, 
-‘Dancing’ and ‘Sashakt’. 
-17. Find society names such that its mentor has a name with  ‘Gupta’ in it. 
-18. Find the society names in which the number of enrolled students is only 10% of its 
-capacity. 
-19. Display the vacant seats for each society. 
-20. Increment Total Seats of each society by 10% 
-21. Add the enrollment fees paid (‘yes’/’No’) field in the enrollment table. 
-22. Update date of enrollment of society id ‘s1’ to ‘2018-01-15’, ‘s2’ to the current date and 
-‘s3’ to ‘2018-01-02’. 
-23. Create a view to keep track of society names with the total number of students enrolled in 
-it. 
-24. Find student names enrolled in all the societies. 
-25. Count the number of societies with more than 5 students enrolled in it 
-26. Add column Mobile number in student table with default value ‘9999999999’ 
-27. Find the total number of students whose age is > 20 years. 
-28. Find names of students who were born in 2001 and are enrolled in at least one society. 
-29. Count all societies whose name starts with ‘S’ and ends with ‘t’ and at least 5 students are 
-enrolled in the society. 
-30. Display the following information: 
-Society name 
-Mentor name 
-Total Capacity Total Enrolled Unfilled Seats
-II. Do the following database administration commands: 
-Create user, create role, grant privileges to a role, revoke privileges from a role, create index 
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
+static long comparisons = 0;
 
+void swap(int* a, int* b) {
+    int t = *a;
+    *a = *b;
+    *b = t;
+}
 
+int random_int(int p, int r) {
+    return p + rand() % (r - p + 1);
+}
 
+int partition(int A[], int p, int r) {
+    int x = A[r];
+    int i = p - 1;
 
+    for (int j = p; j < r; j++) {
+        comparisons++;
+        if (A[j] <= x) {
+            i++;
+            swap(&A[i], &A[j]);
+        }
+    }
+    swap(&A[i + 1], &A[r]);
+    return i + 1;
+}
 
-= I : Schema Creation
+int randomized_partition(int A[], int p, int r) {
+    int i = random_int(p, r);
+    swap(&A[r], &A[i]);
+    return partition(A, p, r);
+}
 
-```sql
-CREATE TABLE STUDENT (
-    RollNo CHAR(6) PRIMARY KEY,
-    StudentName VARCHAR(20),
-    Course VARCHAR(20),
-    DOB DATE,
-    MobileNumber VARCHAR(10) DEFAULT '9999999999'
-);
+void randomized_quicksort(int A[], int p, int r) {
+    if (p < r) {
+        int q = randomized_partition(A, p, r);
+        randomized_quicksort(A, p, q - 1);
+        randomized_quicksort(A, q + 1, r);
+    }
+}
 
-CREATE TABLE SOCIETY (
-    SocID CHAR(6) PRIMARY KEY,
-    SocName VARCHAR(20),
-    MentorName VARCHAR(30),
-    TotalSeats INT UNSIGNED
-);
+int main(void) {
+    srand((unsigned)time(NULL));
 
-CREATE TABLE ENROLLMENT (
-    RollNo CHAR(6),
-    SID CHAR(6),
-    DateOfEnrollment DATE,
-    FeesPaid VARCHAR(3),
-    PRIMARY KEY (RollNo, SID),
-    FOREIGN KEY (RollNo) REFERENCES STUDENT(RollNo),
-    FOREIGN KEY (SID) REFERENCES SOCIETY(SocID)
-);
+    int A[] = { 4, 2, 5, 3, 1, 9, 8, 7, 6, 0 };
+    int n = (int)(sizeof(A) / sizeof(A[0]));
 
-== Question 1 : 
-```sql
-SELECT DISTINCT s.StudentName
-FROM STUDENT s
-JOIN ENROLLMENT e ON s.RollNo = e.RollNo;
-```
-== Question 2
+    randomized_quicksort(A, 0, n - 1);
 
-```sql
-SELECT SocName FROM SOCIETY;
-```
+    for (int i = 0; i < n; i++)
+        printf("%d ", A[i]);
+    putchar('\n');
 
-== Question 3
-```sql
-SELECT StudentName FROM STUDENT
-WHERE StudentName LIKE 'A%';
-```
+    printf("comparisons: %ld\n", comparisons);
 
-== Question 4
-```sql
-SELECT * FROM STUDENT
-WHERE Course IN ('computer science', 'chemistry');
-```
-
-== Question 5
-```sql
-SELECT StudentName FROM STUDENT
-WHERE (RollNo LIKE 'X%' OR RollNo LIKE 'Z%')
-AND RollNo LIKE '%9';
-```
-
-== Question 6
-```sql
-SELECT * FROM SOCIETY
-WHERE TotalSeats > N;
-```
-
-== Question 7
-```sql
-UPDATE SOCIETY
-SET MentorName = 'New Mentor'
-WHERE SocID = 's1';
-```
-
-== Question 8
-```sql
-SELECT SocName
-FROM SOCIETY s
-JOIN ENROLLMENT e ON s.SocID = e.SID
-GROUP BY SocName
-HAVING COUNT(*) > 5;
-```
-
-== Question 9
-``` sql
-SELECT s.StudentName
-FROM STUDENT s
-JOIN ENROLLMENT e ON s.RollNo = e.RollNo
-JOIN SOCIETY so ON so.SocID = e.SID
-WHERE so.SocName = 'NSS'
-ORDER BY s.DOB DESC
-LIMIT 1;
-```
-
-== Question 10
-```sql
-SELECT so.SocName
-FROM SOCIETY so
-JOIN ENROLLMENT e ON so.SocID = e.SID
-GROUP BY so.SocName
-ORDER BY COUNT(*) DESC
-LIMIT 1;
-```
-
-== Question 11
-```sql
-SELECT so.SocName
-FROM SOCIETY so
-LEFT JOIN ENROLLMENT e ON so.SocID = e.SID
-GROUP BY so.SocName
-ORDER BY COUNT(e.RollNo) ASC
-LIMIT 2;
-```
-
-== Question 12
-``` sq;
-SELECT StudentName
-FROM STUDENT
-WHERE RollNo NOT IN (SELECT RollNo FROM ENROLLMENT);
-```
-
-== Question 13
-```sql
-SELECT s.StudentName
-FROM STUDENT s
-JOIN ENROLLMENT e ON s.RollNo = e.RollNo
-GROUP BY s.StudentName
-HAVING COUNT(e.SID) >= 2;
-```
-
-== Question 14
-```sql
-SELECT so.SocName
-FROM SOCIETY so
-JOIN ENROLLMENT e ON so.SocID = e.SID
-GROUP BY so.SocName
-HAVING COUNT(*) = (
-    SELECT MAX(cnt)
-    FROM (
-        SELECT COUNT(*) cnt
-        FROM ENROLLMENT
-        GROUP BY SID
-    ) t
-);
-```
-
-== Question 15
-```sql
-SELECT DISTINCT s.StudentName, so.SocName
-FROM STUDENT s
-JOIN ENROLLMENT e ON s.RollNo = e.RollNo
-JOIN SOCIETY so ON so.SocID = e.SID;
-```
-
-== Question 16
-```sql
-SELECT DISTINCT s.StudentName
-FROM STUDENT s
-JOIN ENROLLMENT e ON s.RollNo = e.RollNo
-JOIN SOCIETY so ON so.SocID = e.SID
-WHERE so.SocName IN ('Debating', 'Dancing', 'Sashakt');
-```
-
-== Question 17
-```sql
-SELECT SocName
-FROM SOCIETY
-WHERE MentorName LIKE '%Gupta%';
-```
-
-== Question 18
-```sql
-SELECT so.SocName
-FROM SOCIETY so
-LEFT JOIN ENROLLMENT e ON so.SocID = e.SID
-GROUP BY so.SocName, so.TotalSeats
-HAVING COUNT(e.RollNo) = 0.1 * so.TotalSeats;
-```
-
-== Question 19
-```sql
-SELECT so.SocName,
-       so.TotalSeats - COUNT(e.RollNo) AS VacantSeats
-FROM SOCIETY so
-LEFT JOIN ENROLLMENT e ON so.SocID = e.SID
-GROUP BY so.SocName, so.TotalSeats;
-```
-
-== Question 20
-```sql
-UPDATE SOCIETY
-SET TotalSeats = TotalSeats * 1.1;
-```
-
-== Question 21
-```sql
-SELECT * FROM ENROLLMENT;
-```
-
-== Question 22
-```sql
-UPDATE ENROLLMENT
-SET DateOfEnrollment = CASE
-    WHEN SID = 's1' THEN '2018-01-15'
-    WHEN SID = 's2' THEN CURRENT_DATE
-    WHEN SID = 's3' THEN '2018-01-02'
-END;
-```
-
-== Question 23
-```sql
-CREATE VIEW SocietyEnrollment AS
-SELECT so.SocName, COUNT(e.RollNo) AS TotalStudents
-FROM SOCIETY so
-LEFT JOIN ENROLLMENT e ON so.SocID = e.SID
-GROUP BY so.SocName;
-```
-== Question 24
-```sql
-SELECT StudentName
-FROM STUDENT s
-WHERE NOT EXISTS (
-    SELECT SocID FROM SOCIETY
-    EXCEPT
-    SELECT SID FROM ENROLLMENT e WHERE e.RollNo = s.RollNo
-);
-```
-== Question 25
-```sql
-SELECT COUNT(*)
-
-FROM (
-    SELECT SID
-    FROM ENROLLMENT
-    GROUP BY SID
-    HAVING COUNT(*) > 5
-) t;
-```
-
-== Question 26
-```
-SELECT * FROM STUDENT;
-```
-
-== Question 27
-```sql
-SELECT COUNT(*)
-FROM STUDENT
-WHERE TIMESTAMPDIFF(YEAR, DOB, CURDATE()) > 20;
-```
-
-== Question 28
-```sql
-SELECT DISTINCT s.StudentName
-FROM STUDENT s
-JOIN ENROLLMENT e ON s.RollNo = e.RollNo
-WHERE YEAR(s.DOB) = 2001;
-```
-
-== Question 29
-```sql
-SELECT COUNT(*)
-FROM (
-    SELECT so.SocName
-    FROM SOCIETY so
-    JOIN ENROLLMENT e ON so.SocID = e.SID
-    WHERE so.SocName LIKE 'S%t'
-    GROUP BY so.SocName
-    HAVING COUNT(*) >= 5
-) t;
-```
-
-== Question 30
-```sql
-SELECT so.SocName,
-       so.MentorName,
-       so.TotalSeats AS TotalCapacity,
-       COUNT(e.RollNo) AS TotalEnrolled,
-       so.TotalSeats - COUNT(e.RollNo) AS UnfilledSeats
-FROM SOCIETY so
-LEFT JOIN ENROLLMENT e ON so.SocID = e.SID
-GROUP BY so.SocName, so.MentorName, so.TotalSeats;
-```
-
-== DBA 1
-```sql
-CREATE USER 'user1'@'localhost' IDENTIFIED BY 'password';
-```
-
-== DBA 2
-```sql
-CREATE ROLE 'role1';
-```
-
-== DBA 3
-```sql
-GRANT SELECT, INSERT, UPDATE ON *.* TO 'role1';
-```
-
-== DBA 4
-```sql
-GRANT 'role1' TO 'user1'@'localhost';
-```
-
-== DBA 5
-```sql
-REVOKE INSERT ON *.* FROM 'role1';
-```
-== DBA 6
-```sql
-CREATE INDEX idx_student_name ON STUDENT(StudentName);
-```
+    return 0;
+}
 
 
-To  
-The Embassy of Japan / Selection Committee  
-MEXT Scholarship Program  
+============================================================
+Lab 2: Randomized Select
+============================================================
 
-Subject: Recommendation Letter for Mr. Vivaan Singh Adhikari  
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
-I am pleased to recommend Mr. Vivaan Singh Adhikari for the Japanese Government (MEXT) Scholarship. I have known him in my capacity as his professor at Atma Ram Sanatan Dharma College, University of Delhi, where he is currently pursuing B.Sc. (Hons.) Computer Science.
+int randomizedPartition(int A[], int p, int r) {
+    int i = p + rand() % (r - p + 1);
+    int temp = A[i];
+    A[i] = A[r];
+    A[r] = temp;
 
-During my interaction with Vivaan, I have found him to be a sincere, disciplined, and responsible student. He demonstrates a serious attitude toward his academic responsibilities and possesses the adaptability and commitment required to function effectively in a rigorous academic environment.
+    int pivot = A[r];
+    int j = p - 1;
+    for (i = p; i < r; i++) {
+        if (A[i] <= pivot) {
+            j++;
+            temp = A[j];
+            A[j] = A[i];
+            A[i] = temp;
+        }
+    }
+    temp = A[j + 1];
+    A[j + 1] = A[r];
+    A[r] = temp;
+    return j + 1;
+}
 
-Vivaan is respectful in his conduct, cooperative with peers, and maintains a professional attitude in academic settings. He has shown the potential for further growth in initiative and confidence, particularly in new and challenging environments.
+int randomizedSelect(int A[], int p, int r, int i) {
+    if (p == r)
+        return A[p];
 
-I believe he has strong potential for academic growth through undergraduate studies in Japan and will make productive use of the opportunities provided through the MEXT Scholarship. I am confident that the knowledge and experience gained will contribute positively to his future academic and professional development.
+    int q = randomizedPartition(A, p, r);
+    int k = q - p + 1;
 
-I strongly recommend Mr. Vivaan Singh Adhikari for the Japanese Government (MEXT) Scholarship.
+    if (i == k)
+        return A[q];
+    else if (i < k)
+        return randomizedSelect(A, p, q - 1, i);
+    else
+        return randomizedSelect(A, q + 1, r, i - k);
+}
 
-Sincerely,
+int main() {
+    srand(time(NULL));
 
-[Teacher Name]  
-[Designation]  
-Department of Computer Science  
-Atma Ram Sanatan Dharma College  
-University of Delhi  
+    int A[] = {3, 2, 9, 0, 7, 5, 4, 8, 6, 1};
+    int n = sizeof(A) / sizeof(A[0]);
 
-Signature: __________  
-Date: __________
+    for (int i = 1; i <= n; i++) {
+        int result = randomizedSelect(A, 0, n - 1, i);
+        printf("The %d-th smallest element is %d\n", i, result);
+    }
+
+    return 0;
+}
 
 
+============================================================
+Lab 3: Kruskal's Algorithm
+============================================================
+
+// C code to implement Kruskal's algorithm
+#include <stdio.h>
+#include <stdlib.h>
+
+// Comparator function to use in sorting
+int comparator(const void *p1, const void *p2)
+{
+    const int *a = (const int *)p1;
+    const int *b = (const int *)p2;
+    return a[2] - b[2];
+}
+
+// Initialization of parent[] and rank[] arrays
+void makeSet(int parent[], int rank[], int n)
+{
+    for (int i = 0; i < n; i++) {
+        parent[i] = i;
+        rank[i] = 0;
+    }
+}
+
+// Function to find the parent of a node
+int findParent(int parent[], int component)
+{
+    if (parent[component] == component)
+        return component;
+
+    return parent[component]
+        = findParent(parent, parent[component]);
+}
+
+// Function to unite two sets
+void unionSet(int u, int v, int parent[], int rank[], int n)
+{
+    u = findParent(parent, u);
+    v = findParent(parent, v);
+
+    if (rank[u] < rank[v]) {
+        parent[u] = v;
+    }
+    else if (rank[u] > rank[v]) {
+        parent[v] = u;
+    }
+    else {
+        parent[v] = u;
+        rank[u]++;
+    }
+}
+
+// Function to find the MST
+int kruskalAlgo(int n, int edge[n][3])
+{
+    qsort(edge, n, sizeof(edge[0]), comparator);
+    int parent[n];
+    int rank[n];
+    makeSet(parent, rank, n);
+
+    int minCost = 0;
+    for (int i = 0; i < n; i++) {
+        int v1 = findParent(parent, edge[i][0]);
+        int v2 = findParent(parent, edge[i][1]);
+        int wt = edge[i][2];
+
+        if (v1 != v2) {
+            unionSet(v1, v2, parent, rank, n);
+            minCost += wt;
+        }
+    }
+
+    return minCost;
+}
+
+// Driver code
+int main()
+{
+    int edge[5][3] = { { 0, 1, 10 },
+                    { 0, 2, 6 },
+                    { 0, 3, 5 },
+                    { 1, 3, 15 },
+                    { 2, 3, 4 } };
+
+    printf("%d\n", kruskalAlgo(5, edge));
+
+    return 0;
+}
+
+
+============================================================
+Lab 4: Bellman-Ford Algorithm
+============================================================
+
+#include <limits.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX_VERTICES 1000
+#define INF INT_MAX
+
+typedef struct {
+    int source;
+    int destination;
+    int weight;
+} Edge;
+
+void bellmanFord(int graph[MAX_VERTICES][MAX_VERTICES],
+    int vertices, int edges, int source)
+{
+    int distance[MAX_VERTICES];
+
+    for (int i = 0; i < vertices; ++i)
+        distance[i] = INF;
+    distance[source] = 0;
+
+    for (int i = 0; i < vertices - 1; ++i) {
+        for (int j = 0; j < edges; ++j) {
+            if (graph[j][0] != -1
+                && distance[graph[j][0]] != INF
+                && distance[graph[j][1]]
+                > distance[graph[j][0]]
+                + graph[j][2])
+                distance[graph[j][1]]
+                = distance[graph[j][0]] + graph[j][2];
+        }
+    }
+
+    for (int i = 0; i < edges; ++i) {
+        if (graph[i][0] != -1
+            && distance[graph[i][0]] != INF
+            && distance[graph[i][1]]
+            > distance[graph[i][0]] + graph[i][2]) {
+            printf("Negative cycle detected\n");
+            return;
+        }
+    }
+
+    printf("Vertex Distance from Source\n");
+    for (int i = 0; i < vertices; ++i)
+        printf("%d \t\t %d\n", i, distance[i]);
+}
+
+int main()
+{
+    int vertices = 6;
+    int edges = 8;
+
+    int graph[MAX_VERTICES][MAX_VERTICES]
+        = { { 0, 1, 5 }, { 0, 2, 7 }, { 1, 2, 3 },
+            { 1, 3, 4 }, { 1, 4, 6 }, { 3, 4, -1 },
+            { 3, 5, 2 }, { 4, 5, -3 } };
+
+    bellmanFord(graph, vertices, edges, 0);
+    return 0;
+}
+
+
+============================================================
+Lab 5: B-Tree
+============================================================
+
+#include <iostream>
+using namespace std;
+
+template <typename T, int ORDER>
+class BTreeNode {
+public:
+    T keys[ORDER - 1];
+    BTreeNode* children[ORDER];
+    int n;
+    bool leaf;
+
+    BTreeNode(bool isLeaf = true) : n(0), leaf(isLeaf) {
+        for (int i = 0; i < ORDER; i++)
+            children[i] = nullptr;
+    }
+};
+
+template <typename T, int ORDER>
+class BTree {
+private:
+    BTreeNode<T, ORDER>* root;
+
+    void splitChild(BTreeNode<T, ORDER>* x, int i) {
+        BTreeNode<T, ORDER>* y = x->children[i];
+        BTreeNode<T, ORDER>* z = new BTreeNode<T, ORDER>(y->leaf);
+        z->n = ORDER / 2 - 1;
+
+        for (int j = 0; j < ORDER / 2 - 1; j++)
+            z->keys[j] = y->keys[j + ORDER / 2];
+
+        if (!y->leaf) {
+            for (int j = 0; j < ORDER / 2; j++)
+                z->children[j] = y->children[j + ORDER / 2];
+        }
+
+        y->n = ORDER / 2 - 1;
+
+        for (int j = x->n; j >= i + 1; j--)
+            x->children[j + 1] = x->children[j];
+
+        x->children[i + 1] = z;
+
+        for (int j = x->n - 1; j >= i; j--)
+            x->keys[j + 1] = x->keys[j];
+
+        x->keys[i] = y->keys[ORDER / 2 - 1];
+        x->n = x->n + 1;
+    }
+
+    void insertNonFull(BTreeNode<T, ORDER>* x, T k) {
+        int i = x->n - 1;
+
+        if (x->leaf) {
+            while (i >= 0 && k < x->keys[i]) {
+                x->keys[i + 1] = x->keys[i];
+                i--;
+            }
+            x->keys[i + 1] = k;
+            x->n = x->n + 1;
+        } else {
+            while (i >= 0 && k < x->keys[i])
+                i--;
+
+            i++;
+            if (x->children[i]->n == ORDER - 1) {
+                splitChild(x, i);
+
+                if (k > x->keys[i])
+                    i++;
+            }
+            insertNonFull(x->children[i], k);
+        }
+    }
+
+    void traverse(BTreeNode<T, ORDER>* x) {
+        int i;
+        for (i = 0; i < x->n; i++) {
+            if (!x->leaf)
+                traverse(x->children[i]);
+            cout << " " << x->keys[i];
+        }
+
+        if (!x->leaf)
+            traverse(x->children[i]);
+    }
+
+    BTreeNode<T, ORDER>* search(BTreeNode<T, ORDER>* x, T k) {
+        int i = 0;
+        while (i < x->n && k > x->keys[i])
+            i++;
+
+        if (i < x->n && k == x->keys[i])
+            return x;
+
+        if (x->leaf)
+            return nullptr;
+
+        return search(x->children[i], k);
+    }
+
+    T getPredecessor(BTreeNode<T, ORDER>* node, int idx) {
+        BTreeNode<T, ORDER>* current = node->children[idx];
+        while (!current->leaf)
+            current = current->children[current->n];
+        return current->keys[current->n - 1];
+    }
+
+    T getSuccessor(BTreeNode<T, ORDER>* node, int idx) {
+        BTreeNode<T, ORDER>* current = node->children[idx + 1];
+        while (!current->leaf)
+            current = current->children[0];
+        return current->keys[0];
+    }
+
+    void fill(BTreeNode<T, ORDER>* node, int idx) {
+        if (idx != 0 && node->children[idx - 1]->n >= ORDER / 2)
+            borrowFromPrev(node, idx);
+        else if (idx != node->n && node->children[idx + 1]->n >= ORDER / 2)
+            borrowFromNext(node, idx);
+        else {
+            if (idx != node->n)
+                merge(node, idx);
+            else
+                merge(node, idx - 1);
+        }
+    }
+
+    void borrowFromPrev(BTreeNode<T, ORDER>* node, int idx) {
+        BTreeNode<T, ORDER>* child = node->children[idx];
+        BTreeNode<T, ORDER>* sibling = node->children[idx - 1];
+
+        for (int i = child->n - 1; i >= 0; --i)
+            child->keys[i + 1] = child->keys[i];
+
+        if (!child->leaf) {
+            for (int i = child->n; i >= 0; --i)
+                child->children[i + 1] = child->children[i];
+        }
+
+        child->keys[0] = node->keys[idx - 1];
+
+        if (!child->leaf)
+            child->children[0] = sibling->children[sibling->n];
+
+        node->keys[idx - 1] = sibling->keys[sibling->n - 1];
+
+        child->n += 1;
+        sibling->n -= 1;
+    }
+
+    void borrowFromNext(BTreeNode<T, ORDER>* node, int idx) {
+        BTreeNode<T, ORDER>* child = node->children[idx];
+        BTreeNode<T, ORDER>* sibling = node->children[idx + 1];
+
+        child->keys[child->n] = node->keys[idx];
+
+        if (!child->leaf)
+            child->children[child->n + 1] = sibling->children[0];
+
+        node->keys[idx] = sibling->keys[0];
+
+        for (int i = 1; i < sibling->n; ++i)
+            sibling->keys[i - 1] = sibling->keys[i];
+
+        if (!sibling->leaf) {
+            for (int i = 1; i <= sibling->n; ++i)
+                sibling->children[i - 1] = sibling->children[i];
+        }
+
+        child->n += 1;
+        sibling->n -= 1;
+    }
+
+    void merge(BTreeNode<T, ORDER>* node, int idx) {
+        BTreeNode<T, ORDER>* child = node->children[idx];
+        BTreeNode<T, ORDER>* sibling = node->children[idx + 1];
+        child->keys[ORDER / 2 - 1] = node->keys[idx];
+        for (int i = 0; i < sibling->n; ++i)
+            child->keys[i + ORDER / 2] = sibling->keys[i];
+        if (!child->leaf) {
+            for (int i = 0; i <= sibling->n; ++i)
+                child->children[i + ORDER / 2] = sibling->children[i];
+        }
+        for (int i = idx + 1; i < node->n; ++i)
+            node->keys[i - 1] = node->keys[i];
+        for (int i = idx + 2; i <= node->n; ++i)
+            node->children[i - 1] = node->children[i];
+        child->n += sibling->n + 1;
+        node->n--;
+        delete sibling;
+    }
+
+    void removeFromNonLeaf(BTreeNode<T, ORDER>* node, int idx) {
+        T k = node->keys[idx];
+        if (node->children[idx]->n >= ORDER / 2) {
+            T pred = getPredecessor(node, idx);
+            node->keys[idx] = pred;
+            remove(node->children[idx], pred);
+        } else if (node->children[idx + 1]->n >= ORDER / 2) {
+            T succ = getSuccessor(node, idx);
+            node->keys[idx] = succ;
+            remove(node->children[idx + 1], succ);
+        } else {
+            merge(node, idx);
+            remove(node->children[idx], k);
+        }
+    }
+
+    void removeFromLeaf(BTreeNode<T, ORDER>* node, int idx) {
+        for (int i = idx + 1; i < node->n; ++i)
+            node->keys[i - 1] = node->keys[i];
+        node->n--;
+    }
+
+    void remove(BTreeNode<T, ORDER>* node, T k) {
+        int idx = 0;
+        while (idx < node->n && node->keys[idx] < k)
+            ++idx;
+        if (idx < node->n && node->keys[idx] == k) {
+            if (node->leaf)
+                removeFromLeaf(node, idx);
+            else
+                removeFromNonLeaf(node, idx);
+        } else {
+            if (node->leaf) {
+                cout << "The key " << k << " is not present in the tree\n";
+                return;
+            }
+            bool flag = ((idx == node->n) ? true : false);
+            if (node->children[idx]->n < ORDER / 2)
+                fill(node, idx);
+            if (flag && idx > node->n)
+                remove(node->children[idx - 1], k);
+            else
+                remove(node->children[idx], k);
+        }
+    }
+
+public:
+    BTree() { root = new BTreeNode<T, ORDER>(true); }
+    void insert(T k) {
+        if (root->n == ORDER - 1) {
+            BTreeNode<T, ORDER>* s = new BTreeNode<T, ORDER>(false);
+            s->children[0] = root;
+            root = s;
+            splitChild(s, 0);
+            insertNonFull(s, k);
+        } else
+            insertNonFull(root, k);
+    }
+
+    void traverse() {
+        if (root != nullptr)
+            traverse(root);
+    }
+
+    BTreeNode<T, ORDER>* search(T k) {
+        return (root == nullptr) ? nullptr : search(root, k);
+    }
+
+    void remove(T k) {
+        if (!root) {
+            cout << "The tree is empty\n";
+            return;
+        }
+
+        remove(root, k);
+
+        if (root->n == 0) {
+            BTreeNode<T, ORDER>* tmp = root;
+            if (root->leaf)
+                root = nullptr;
+            else
+                root = root->children[0];
+            delete tmp;
+        }
+    }
+};
+
+int main() {
+    BTree<int, 3> t;
+
+    t.insert(10);
+    t.insert(20);
+    t.insert(5);
+    t.insert(6);
+    t.insert(12);
+    t.insert(30);
+    t.insert(7);
+    t.insert(17);
+
+    cout << "Traversal of the constructed tree is: ";
+    t.traverse();
+    cout << endl;
+
+    int k = 6;
+    (t.search(k) != nullptr) ? cout << k << " is found" << endl
+        : cout << k << " is not found" << endl;
+
+    k = 15;
+    (t.search(k) != nullptr) ? cout << k << " is found" << endl
+        : cout << k << " is not found" << endl;
+
+    t.remove(6);
+    cout << "Traversal of the tree after removing 6: ";
+    t.traverse();
+    cout << endl;
+
+    t.remove(13);
+    cout << "Traversal of the tree after removing 13: ";
+    t.traverse();
+    cout << endl;
+
+    return 0;
+}
+
+
+============================================================
+Lab 6: KMP String Matching
+============================================================
+
+#include <iostream>
+#include <string>
+#include <vector>
+using namespace std;
+
+void constructLps(string &pat, vector<int> &lps) {
+    int len = 0;
+    lps[0] = 0;
+    int i = 1;
+    while (i < pat.length()) {
+        if (pat[i] == pat[len]) {
+            len++;
+            lps[i] = len;
+            i++;
+        }
+        else {
+            if (len != 0) {
+                len = lps[len - 1];
+            }
+            else {
+                lps[i] = 0;
+                i++;
+            }
+        }
+    }
+}
+
+vector<int> search(string &pat, string &txt) {
+    int n = txt.length();
+    int m = pat.length();
+
+    vector<int> lps(m);
+    vector<int> res;
+
+    constructLps(pat, lps);
+
+    int i = 0;
+    int j = 0;
+
+    while (i < n) {
+        if (txt[i] == pat[j]) {
+            i++;
+            j++;
+        }
+        if (j == m) {
+            res.push_back(i - j);
+            j = lps[j - 1];
+        }
+        else {
+            if (j != 0)
+                j = lps[j - 1];
+            else
+                i++;
+        }
+    }
+    return res;
+}
+
+int main() {
+    string txt = "aabaacaadaabaaba";
+    string pat = "aaba";
+
+    vector<int> res = search(pat, txt);
+    for (int i = 0; i < res.size(); i++)
+        cout << res[i] << " ";
+
+    return 0;
+}
+
+
+============================================================
+Lab 7: Suffix Tree
+============================================================
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#define MAX_CHAR 256
+
+struct SuffixTreeNode {
+    struct SuffixTreeNode *children[MAX_CHAR];
+    struct SuffixTreeNode *suffixLink;
+    int start;
+    int *end;
+    int suffixIndex;
+};
+
+typedef struct SuffixTreeNode Node;
+
+char text[100];
+Node *root = NULL;
+
+Node *lastNewNode = NULL;
+Node *activeNode = NULL;
+
+int activeEdge = -1;
+int activeLength = 0;
+
+int remainingSuffixCount = 0;
+int leafEnd = -1;
+int *rootEnd = NULL;
+int *splitEnd = NULL;
+int size = -1;
+
+Node *newNode(int start, int *end)
+{
+    Node *node =(Node*) malloc(sizeof(Node));
+    int i;
+    for (i = 0; i < MAX_CHAR; i++)
+        node->children[i] = NULL;
+
+    node->suffixLink = root;
+    node->start = start;
+    node->end = end;
+    node->suffixIndex = -1;
+    return node;
+}
+
+int edgeLength(Node *n) {
+    if(n == root)
+        return 0;
+    return *(n->end) - (n->start) + 1;
+}
+
+int walkDown(Node *currNode)
+{
+    if (activeLength >= edgeLength(currNode))
+    {
+        activeEdge += edgeLength(currNode);
+        activeLength -= edgeLength(currNode);
+        activeNode = currNode;
+        return 1;
+    }
+    return 0;
+}
+
+void extendSuffixTree(int pos)
+{
+    leafEnd = pos;
+    remainingSuffixCount++;
+    lastNewNode = NULL;
+
+    while(remainingSuffixCount > 0) {
+        if (activeLength == 0)
+            activeEdge = pos;
+
+        if (activeNode->children[text[activeEdge]] == NULL)
+        {
+            activeNode->children[text[activeEdge]] =
+                newNode(pos, &leafEnd);
+
+            if (lastNewNode != NULL)
+            {
+                lastNewNode->suffixLink = activeNode;
+                lastNewNode = NULL;
+            }
+        }
+        else
+        {
+            Node *next = activeNode->children[text[activeEdge]];
+            if (walkDown(next))
+            {
+                continue;
+            }
+            if (text[next->start + activeLength] == text[pos])
+            {
+                if(lastNewNode != NULL && activeNode != root)
+                {
+                    lastNewNode->suffixLink = activeNode;
+                    lastNewNode = NULL;
+                }
+
+                activeLength++;
+                break;
+            }
+
+            splitEnd = (int*) malloc(sizeof(int));
+            *splitEnd = next->start + activeLength - 1;
+
+            Node *split = newNode(next->start, splitEnd);
+            activeNode->children[text[activeEdge]] = split;
+
+            split->children[text[pos]] = newNode(pos, &leafEnd);
+            next->start += activeLength;
+            split->children[text[next->start]] = next;
+
+            if (lastNewNode != NULL)
+            {
+                lastNewNode->suffixLink = split;
+            }
+
+            lastNewNode = split;
+        }
+
+        remainingSuffixCount--;
+        if (activeNode == root && activeLength > 0)
+        {
+            activeLength--;
+            activeEdge = pos - remainingSuffixCount + 1;
+        }
+        else if (activeNode != root)
+        {
+            activeNode = activeNode->suffixLink;
+        }
+    }
+}
+
+void print(int i, int j)
+{
+    int k;
+    for (k=i; k<=j && text[k] != '#'; k++)
+        printf("%c", text[k]);
+    if(k<=j)
+        printf("#");
+}
+
+void setSuffixIndexByDFS(Node *n, int labelHeight)
+{
+    if (n == NULL) return;
+
+    if (n->start != -1)
+    {
+        print(n->start, *(n->end));
+    }
+    int leaf = 1;
+    int i;
+    for (i = 0; i < MAX_CHAR; i++)
+    {
+        if (n->children[i] != NULL)
+        {
+            if (leaf == 1 && n->start != -1)
+                printf("%d]\n", n->suffixIndex);
+
+            leaf = 0;
+            setSuffixIndexByDFS(n->children[i], labelHeight + edgeLength(n->children[i]));
+        }
+    }
+    if (leaf == 1)
+    {
+        for (i = n->start; i<= *(n->end); i++)
+        {
+            if (text[i] == '#')
+            {
+                n->end = (int*) malloc(sizeof(int));
+                *(n->end) = i;
+            }
+        }
+        n->suffixIndex = size - labelHeight;
+        printf("%d\n", n->suffixIndex);
+    }
+}
+
+void freeSuffixTreeByPostOrder(Node *n)
+{
+    if (n == NULL)
+        return;
+    int i;
+    for (i = 0; i < MAX_CHAR; i++)
+    {
+        if (n->children[i] != NULL)
+        {
+            freeSuffixTreeByPostOrder(n->children[i]);
+        }
+    }
+    if (n->suffixIndex == -1)
+        free(n->end);
+    free(n);
+}
+
+void buildSuffixTree()
+{
+    size = strlen(text);
+    int i;
+    rootEnd = (int*) malloc(sizeof(int));
+    *rootEnd = -1;
+
+    root = newNode(-1, rootEnd);
+
+    activeNode = root;
+    for (i=0; i<size; i++)
+        extendSuffixTree(i);
+    int labelHeight = 0;
+    setSuffixIndexByDFS(root, labelHeight);
+
+    freeSuffixTreeByPostOrder(root);
+}
+
+int main(int argc, char *argv[])
+{
+    strcpy(text, "xabxa#babxba$"); buildSuffixTree();
+    return 0;
+}
