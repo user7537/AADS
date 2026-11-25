@@ -1,7 +1,5 @@
 # Design and Analysis of Algorithms — Lab Manual
 
-**Vivaan Singh Adhikari · 24/48029**
-
 ---
 
 ## Lab 1: Randomized Quick Sort
